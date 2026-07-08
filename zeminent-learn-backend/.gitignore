@@ -1,0 +1,22 @@
+node_modules
+dist
+coverage
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+
+# editor / OS
+.DS_Store
+.idea
+.vscode
+*.swp
+cookies.txt
+
+# secrets
+cloudfront-private-key.pem

@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@theme {
+  /* Zeminent brand theme — see zeminent.com */
+  --color-bg: #0d1117;
+  --color-bg-elev: #141a23;
+  --color-card: #161d27;
+  --color-card-2: #1c2531;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-accent: #5eead4;
+  --color-accent-2: #2dd4bf;
+  --color-accent-soft: rgba(94, 234, 212, 0.15);
+  --color-accent-violet: #818cf8;
+  --color-accent-warm: #f5b86b;
+  --color-muted: #6b7280;
+  --color-muted-2: #a8b0bb;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+html {
+  scroll-padding-top: 80px;
+}
+
+/* ── Theme tokens ───────────────────────────────────────────────────────────
+   The app is dark-first. These mirror components/styles/globalStyles.js so the
+   `--bg/--fg/--border/--accent` family is defined on every route (not just the
+   marketing home, which injects STYLES). Light mode is opt-in via `html.light`,
+   toggled by ThemeProvider; it remaps both this family and the Tailwind
+   `--color-*` tokens so utilities (bg-card, text-muted-2, …) flip too. */
+:root {
+  --bg: #0d1117;
+  --bg-1: #141a23;
+  --bg-2: #161d27;
+  --bg-3: #1c2531;
+  --fg: #e8ecef;
+  --fg-dim: #a8b0bb;
+  --fg-mute: #6b7280;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --accent: #5eead4;
+  --accent-dim: rgba(94, 234, 212, 0.16);
+  --accent-glow: rgba(94, 234, 212, 0.35);
+  --nav-bg: rgba(11, 2, 31, 0.78);
+  --overlay-soft: rgba(255, 255, 255, 0.04);
+}
+
+html.light {
+  /* inline-style family */
+  --bg: #ffffff;
+  --bg-1: #f6f8fa;
+  --bg-2: #ffffff;
+  --bg-3: #eef1f5;
+  --fg: #0d1117;
+  --fg-dim: #4b5563;
+  --fg-mute: #94a3b8;
+  --border: rgba(15, 23, 42, 0.10);
+  --border-strong: rgba(15, 23, 42, 0.22);
+  --accent: #0d9488;
+  --accent-dim: rgba(13, 148, 136, 0.12);
+  --accent-glow: rgba(13, 148, 136, 0.28);
+  --nav-bg: rgba(255, 255, 255, 0.82);
+  --overlay-soft: rgba(15, 23, 42, 0.04);
+
+  /* Tailwind @theme tokens (utilities reference these at runtime) */
+  --color-bg: #ffffff;
+  --color-bg-elev: #f6f8fa;
+  --color-card: #ffffff;
+  --color-card-2: #eef1f5;
+  --color-border: rgba(15, 23, 42, 0.10);
+  --color-border-strong: rgba(15, 23, 42, 0.22);
+  --color-accent: #0d9488;
+  --color-accent-2: #14b8a6;
+  --color-accent-soft: rgba(13, 148, 136, 0.12);
+  --color-muted: #94a3b8;
+  --color-muted-2: #4b5563;
+}
+
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--fg);
+}
+
+/* Brand wordmark (/zeminent-logo.png) is a dark monochrome PNG — great on light
+   surfaces, invisible on dark. The app is dark-first, so render it white in dark
+   mode and leave it as-is in light mode. */
+.brand-logo {
+  filter: brightness(0) invert(1);
+}
+html.light .brand-logo {
+  filter: none;
+}
+
+.font-display {
+  font-family: var(--font-serif);
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+
+/* Fraunces is scoped to the Dashboard <main> content only (and the certificate,
+   which carries its own Fraunces vars). The Sidebar/side panel and the rest of
+   the app stay on Geist. The universal selector + !important overrides Tailwind
+   font-* utilities and the font-mono-label/font-display helpers inside main. */
+.dashboard-fraunces,
+.dashboard-fraunces * {
+  font-family: var(--font-fraunces), "Fraunces Fallback", ui-serif, Georgia, serif !important;
+}
+
+.font-mono-label {
+  font-family: var(--font-mono);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  color: var(--color-muted-2);
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.005));
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+}
+
+.progress-track {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
+  border-radius: 999px;
+}
+
+.glow-radial {
+  background: radial-gradient(circle at 50% 50%, rgba(94, 234, 212, 0.18), transparent 60%);
+}

@@ -1,0 +1,16 @@
+# Terraform working dir + plugins
+.terraform/
+
+# State (local for now) — may contain secrets in plaintext
+*.tfstate
+*.tfstate.backup
+
+# User-specific var files — but keep the checked-in environment presets
+*.tfvars
+!environments/*.tfvars
+
+# CloudFront signing private key — secret, never commit
+cloudfront-private-key.pem
+
+# Lock file — optional to ignore for a solo dev setup
+.terraform.lock.hcl
