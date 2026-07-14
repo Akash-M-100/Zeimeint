@@ -152,10 +152,14 @@ function useDashboardData() {
 
     if (!mounted.current) return;
 
-    if (meRes.status === "fulfilled" && meRes.value.ok) {
-      const json = await meRes.value.json().catch(() => ({}));
-      const courses = json?.data?.user?.purchasedCourses ?? json?.user?.purchasedCourses;
-      setEnrolled(Array.isArray(courses) ? courses : []);
+    if (meRes.status === "fulfilled") {
+      if (meRes.value.ok) {
+        const json = await meRes.value.json().catch(() => ({}));
+        const courses = json?.data?.user?.purchasedCourses ?? json?.user?.purchasedCourses;
+        setEnrolled(Array.isArray(courses) ? courses : []);
+      } else {
+        setEnrolled([]);
+      }
     } else if (meRes.status === "rejected") {
       setEnrolled([]);
     }
