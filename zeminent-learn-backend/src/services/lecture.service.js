@@ -3,6 +3,8 @@
 const Course = require('../models/course.model');
 const Lecture = require('../models/lecture.model');
 const Section = require('../models/section.model');
+const DPP = require('../models/dpp.model');
+const CodeProblem = require('../models/codeProblem.model');
 const Progress = require('../models/progress.model');
 const ApiError = require('../utils/ApiError');
 const s3Service = require('./s3.service');
@@ -309,6 +311,26 @@ const getLecturesForCourse = async (courseId, viewer) => {
     Lecture.find({ course: course._id }),
     Section.find({ course: course._id }).sort({ order: 1, createdAt: 1 }),
   ]);
+  const dpps = await DPP.find({ section: { $in: sections.map((s) => s._id) } })
+    .sort({ createdAt: 1 })
+    .lean();
+  const codeProblems = await CodeProblem.find({ section: { $in: sections.map((s) => s._id) } })
+    .select('section title questionText solutionCode createdAt')
+    .sort({ createdAt: 1 })
+    .lean();
+  const dppsBySection = new Map();
+  dpps.forEach((dpp) => {
+    const key = String(dpp.section);
+    dppsBySection.set(key, [...(dppsBySection.get(key) || []), dpp]);
+  });
+  const codeProblemsBySection = new Map();
+  codeProblems.forEach((codeProblem) => {
+    const key = String(codeProblem.section);
+    codeProblemsBySection.set(key, [
+      ...(codeProblemsBySection.get(key) || []),
+      codeProblem,
+    ]);
+  });
 
   // gateLectures sorts internally — and access (free-preview count) is decided
   // against the *flat* order, so we must call it once over all lectures.
@@ -329,6 +351,8 @@ const getLecturesForCourse = async (courseId, viewer) => {
       description: sec.description,
       order: sec.order,
       lectures,
+      dpps: dppsBySection.get(String(sec._id)) || [],
+      codeProblems: codeProblemsBySection.get(String(sec._id)) || [],
     };
   });
 

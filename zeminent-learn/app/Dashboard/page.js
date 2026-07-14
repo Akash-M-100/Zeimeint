@@ -570,7 +570,114 @@ function MyCourses({ courses, loading }) {
   );
 }
 
-// ─── 5 · recent activity (timeline) ───────────────────────────────────────────
+// ─── 5 · curriculum roadmap ───────────────────────────────────────────────────
+
+function Curriculum({ courses, loading }) {
+  const visible = courses.slice(0, 4);
+  const total = courses.length;
+  const completed = courses.filter((c) => c.percent >= 100).length;
+  const avg = courses.length
+    ? Math.round(courses.reduce((sum, c) => sum + (c.percent || 0), 0) / courses.length)
+    : 0;
+  const ringStyle = { background: `conic-gradient(#5ce6d0 ${avg * 3.6}deg, rgba(255,255,255,0.08) 0deg)` };
+
+  return (
+    <section id="curriculum" className="flex flex-col gap-4 scroll-mt-8">
+      <SectionHead label="course path" title="Curriculum" />
+      <div className="card overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_280px]">
+        <div className="p-5 md:p-6">
+          <div className="flex items-center justify-between gap-3 mb-5">
+            <h3 className="text-sm font-semibold text-white">Curriculum Roadmap</h3>
+            <span className="rounded-full bg-accent text-bg text-[11px] font-medium px-3 py-1">
+              Learn Completion
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-16 rounded-xl bg-card-2 animate-pulse" />
+              ))}
+            </div>
+          ) : visible.length === 0 ? (
+            <p className="text-sm text-muted-2 py-6">Your curriculum will appear after you enrol in a course.</p>
+          ) : (
+            <ol className="relative flex flex-col gap-3 before:absolute before:left-4 before:top-4 before:bottom-4 before:w-px before:bg-accent/25">
+              {visible.map((c, i) => {
+                const status = statusFor(c);
+                const active = !c.locked && status !== "not_started";
+                return (
+                  <li key={c.id} className="relative grid grid-cols-[32px_1fr] gap-3">
+                    <span
+                      className={`relative z-10 mt-4 size-8 rounded-full border grid place-items-center ${
+                        c.locked
+                          ? "border-border bg-card-2 text-muted"
+                          : active
+                            ? "border-accent bg-accent-soft text-accent-2 shadow-[0_0_18px_rgba(92,230,208,0.25)]"
+                            : "border-accent/40 bg-card text-accent-2"
+                      }`}
+                    >
+                      {c.locked ? <LockIcon width={13} height={13} /> : <CheckCircleIcon width={14} height={14} />}
+                    </span>
+                    <div
+                      className={`rounded-xl border p-4 ${
+                        active
+                          ? "border-accent/50 bg-accent-soft/50"
+                          : c.locked
+                            ? "border-border bg-white/[0.02]"
+                            : "border-border bg-card/70"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-semibold text-white truncate">
+                            Week {i + 1}: {c.title}
+                          </h4>
+                          <p className="text-[11px] text-muted-2 mt-1">
+                            {c.locked ? "Complete previous course to unlock" : `${c.watched}/${c.total || "?"} lessons complete`}
+                          </p>
+                        </div>
+                        <span className="font-mono text-[11px] text-accent-2 shrink-0">{c.percent}%</span>
+                      </div>
+                      <div className="mt-3">
+                        <ProgressBar percent={c.percent} />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
+
+        <aside className="border-t lg:border-t-0 lg:border-l border-border bg-accent-soft/20 p-6 flex flex-col items-center justify-center gap-6">
+          <div className="size-36 rounded-full p-3 shadow-[0_0_30px_rgba(92,230,208,0.22)]" style={ringStyle}>
+            <div className="size-full rounded-full bg-card grid place-items-center text-center">
+              <div>
+                <div className="text-[11px] text-muted-2">Course Completion</div>
+                <div className="text-3xl font-semibold text-accent-2 tabular-nums">{avg}%</div>
+              </div>
+            </div>
+          </div>
+          <div className="w-full">
+            <h3 className="text-sm font-semibold text-white mb-3">Unlocked Milestones</h3>
+            <div className="rounded-xl border border-accent-2/20 bg-accent-soft p-3 flex items-center gap-3">
+              <span className="size-10 rounded-lg bg-accent-warm/15 text-accent-warm grid place-items-center">
+                <MedalIcon width={21} height={21} />
+              </span>
+              <div className="min-w-0">
+                <div className="text-sm text-white truncate">{completed > 0 ? "Course Hero" : "Getting Started"}</div>
+                <div className="text-[11px] text-muted-2">{completed}/{total} courses complete</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
+// ─── 6 · recent activity (timeline) ───────────────────────────────────────────
 
 const ACTIVITY_ICON = {
   certificate: { Icon: MedalIcon, tint: STAT_TINTS.warm },

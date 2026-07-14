@@ -14,11 +14,15 @@ import {
   ChevronRight,
   FolderPlus,
   Play,
+  FileQuestion,
+  Code2,
 } from "lucide-react";
 
 import { courseService } from "@/api/courseService";
 import { lectureService } from "@/api/lectureService";
 import { sectionService } from "@/api/sectionService";
+import { dppService } from "@/api/dppService";
+import { codeProblemService } from "@/api/codeProblemService";
 import PageHeader from "@/components/admin/PageHeader";
 import LectureForm from "@/components/admin/LectureForm";
 import LecturePreview from "@/components/admin/LecturePreview";
@@ -43,6 +47,8 @@ const normalizeBundle = (payload) => {
     sections: sortByOrder(body.sections || []).map((s) => ({
       ...s,
       lectures: sortByOrder(s.lectures || []),
+      dpps: s.dpps || [],
+      codeProblems: s.codeProblems || [],
     })),
     orphanLectures: sortByOrder(body.orphanLectures || []),
   };
@@ -68,6 +74,13 @@ export default function CourseLectures({ basePath = "/admin" }) {
   const [savingLecture, setSavingLecture] = useState(false);
   // Lecture the admin/instructor is previewing in-panel (null = closed).
   const [previewLecture, setPreviewLecture] = useState(null);
+  const [dppFormOpen, setDppFormOpen] = useState(false);
+  const [dppSectionId, setDppSectionId] = useState(null);
+  const [savingDpp, setSavingDpp] = useState(false);
+  const [codeFormOpen, setCodeFormOpen] = useState(false);
+  const [codeSectionId, setCodeSectionId] = useState(null);
+  const [editingCode, setEditingCode] = useState(null);
+  const [savingCode, setSavingCode] = useState(false);
 
   // Section modal state
   const [sectionFormOpen, setSectionFormOpen] = useState(false);
@@ -76,6 +89,8 @@ export default function CourseLectures({ basePath = "/admin" }) {
 
   // Confirm-delete state
   const [deleteLectureTarget, setDeleteLectureTarget] = useState(null);
+  const [deleteDppTarget, setDeleteDppTarget] = useState(null);
+  const [deleteCodeTarget, setDeleteCodeTarget] = useState(null);
   const [deleteSectionTarget, setDeleteSectionTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -231,6 +246,102 @@ export default function CourseLectures({ basePath = "/admin" }) {
     }
   };
 
+  const openCreateDpp = (sectionId) => {
+    setDppSectionId(sectionId);
+    setDppFormOpen(true);
+  };
+
+  const closeDppForm = () => {
+    if (savingDpp) return;
+    setDppFormOpen(false);
+    setDppSectionId(null);
+  };
+
+  const handleDppSubmit = async (payload) => {
+    setSavingDpp(true);
+    try {
+      await dppService.createDPP(dppSectionId, payload);
+      toast.success("DPP added");
+      setDppFormOpen(false);
+      setDppSectionId(null);
+      await refresh();
+    } catch (err) {
+      toast.error(err.message || "Could not save DPP");
+    } finally {
+      setSavingDpp(false);
+    }
+  };
+
+  const handleDppDelete = async () => {
+    if (!deleteDppTarget) return;
+    setDeleting(true);
+    try {
+      await dppService.deleteDPP(getId(deleteDppTarget));
+      toast.success("DPP deleted");
+      setDeleteDppTarget(null);
+      await refresh();
+    } catch (err) {
+      toast.error(err.message || "Could not delete DPP");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const openCreateCode = (sectionId) => {
+    setEditingCode(null);
+    setCodeSectionId(sectionId);
+    setCodeFormOpen(true);
+  };
+
+  const openEditCode = (codeProblem) => {
+    setEditingCode(codeProblem);
+    setCodeSectionId(codeProblem.section || null);
+    setCodeFormOpen(true);
+  };
+
+  const closeCodeForm = () => {
+    if (savingCode) return;
+    setCodeFormOpen(false);
+    setCodeSectionId(null);
+    setEditingCode(null);
+  };
+
+  const handleCodeSubmit = async (payload) => {
+    setSavingCode(true);
+    try {
+      if (editingCode) {
+        await codeProblemService.updateCodeProblem(getId(editingCode), payload);
+        toast.success("Code problem updated");
+      } else {
+        await codeProblemService.createCodeProblem(codeSectionId, payload);
+        toast.success("Code problem added");
+      }
+      setCodeFormOpen(false);
+      setCodeSectionId(null);
+      setEditingCode(null);
+      await refresh();
+    } catch (err) {
+      toast.error(err.message || "Could not save code problem");
+    } finally {
+      setSavingCode(false);
+    }
+  };
+
+  const handleCodeDelete = async () => {
+    if (!deleteCodeTarget) return;
+    setDeleting(true);
+    try {
+      await codeProblemService.deleteCodeProblem(getId(deleteCodeTarget));
+      toast.success("Code problem deleted");
+      setDeleteCodeTarget(null);
+      await refresh();
+    } catch (err) {
+      toast.error(err.message || "Could not delete code problem");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   /* ----------- Rendering helpers ----------- */
 
   const toggleCollapsed = (key) =>
@@ -307,10 +418,70 @@ export default function CourseLectures({ basePath = "/admin" }) {
     </div>
   );
 
+  const renderDppRow = (dpp) => (
+    <div
+      key={getId(dpp)}
+      className="flex items-center gap-4 border-t border-slate-200 px-4 py-3 first:border-t-0 dark:border-slate-800"
+    >
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+        <FileQuestion className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium text-slate-800 dark:text-slate-100">
+          {dpp.title}
+        </p>
+        <p className="text-xs text-slate-400">DPP practice</p>
+      </div>
+      <button
+        type="button"
+        title="Delete DPP"
+        onClick={() => setDeleteDppTarget(dpp)}
+        className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  const renderCodeRow = (codeProblem) => (
+    <div
+      key={getId(codeProblem)}
+      className="flex items-center gap-4 border-t border-slate-200 px-4 py-3 first:border-t-0 dark:border-slate-800"
+    >
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
+        <Code2 className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium text-slate-800 dark:text-slate-100">
+          {codeProblem.title}
+        </p>
+        <p className="text-xs text-slate-400">Code problem</p>
+      </div>
+      <button
+        type="button"
+        title="Edit code problem"
+        onClick={() => openEditCode(codeProblem)}
+        className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        title="Delete code problem"
+        onClick={() => setDeleteCodeTarget(codeProblem)}
+        className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
   const renderSection = (section) => {
     const key = getId(section);
     const isCollapsed = !!collapsed[key];
     const lectures = section.lectures || [];
+    const dpps = section.dpps || [];
+    const codeProblems = section.codeProblems || [];
     return (
       <div
         key={key}
@@ -334,9 +505,26 @@ export default function CourseLectures({ basePath = "/admin" }) {
               {section.title}
             </p>
             <p className="text-xs text-slate-400">
-              {lectures.length} {lectures.length === 1 ? "lecture" : "lectures"}
+              {lectures.length} {lectures.length === 1 ? "lecture" : "lectures"} ·{" "}
+              {dpps.length} DPP · {codeProblems.length} Code
             </p>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            icon={Code2}
+            onClick={() => openCreateCode(key)}
+          >
+            Add Code
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            icon={FileQuestion}
+            onClick={() => openCreateDpp(key)}
+          >
+            Add DPP
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -365,20 +553,24 @@ export default function CourseLectures({ basePath = "/admin" }) {
 
         {!isCollapsed && (
           <div>
-            {lectures.length === 0 ? (
+            {lectures.length === 0 && dpps.length === 0 && codeProblems.length === 0 ? (
               <div className="px-4 py-6 text-center text-sm text-slate-400">
-                No lectures yet —{" "}
+                No content yet —{" "}
                 <button
                   type="button"
                   className="text-brand-600 hover:underline"
                   onClick={() => openCreateLecture(key)}
                 >
-                  add the first one
+                  add the first lecture
                 </button>
                 .
               </div>
             ) : (
-              lectures.map((l, i) => renderLectureRow(l, i))
+              <>
+                {lectures.map((l, i) => renderLectureRow(l, i))}
+                {dpps.map(renderDppRow)}
+                {codeProblems.map(renderCodeRow)}
+              </>
             )}
           </div>
         )}
@@ -511,6 +703,20 @@ export default function CourseLectures({ basePath = "/admin" }) {
         />
       </Modal>
 
+      <Modal open={dppFormOpen} onClose={closeDppForm} title="Add DPP" size="xl">
+        <DppForm onSubmit={handleDppSubmit} onCancel={closeDppForm} loading={savingDpp} />
+      </Modal>
+
+      <Modal open={codeFormOpen} onClose={closeCodeForm} title={editingCode ? "Edit Code" : "Add Code"} size="xl">
+        <CodeProblemForm
+          key={editingCode ? getId(editingCode) : `new-${codeSectionId || "root"}`}
+          initialValues={editingCode || {}}
+          onSubmit={handleCodeSubmit}
+          onCancel={closeCodeForm}
+          loading={savingCode}
+        />
+      </Modal>
+
       <ConfirmDialog
         open={Boolean(deleteLectureTarget)}
         onClose={() => setDeleteLectureTarget(null)}
@@ -530,6 +736,151 @@ export default function CourseLectures({ basePath = "/admin" }) {
         description={`"${deleteSectionTarget?.title}" and all of its lectures will be permanently removed.`}
         confirmLabel="Delete section"
       />
+
+      <ConfirmDialog
+        open={Boolean(deleteDppTarget)}
+        onClose={() => setDeleteDppTarget(null)}
+        onConfirm={handleDppDelete}
+        loading={deleting}
+        title="Delete DPP"
+        description={`"${deleteDppTarget?.title}" will be permanently removed.`}
+        confirmLabel="Delete DPP"
+      />
+
+      <ConfirmDialog
+        open={Boolean(deleteCodeTarget)}
+        onClose={() => setDeleteCodeTarget(null)}
+        onConfirm={handleCodeDelete}
+        loading={deleting}
+        title="Delete code problem"
+        description={`"${deleteCodeTarget?.title}" will be permanently removed.`}
+        confirmLabel="Delete code"
+      />
     </div>
+  );
+}
+
+const emptyQuestion = () => ({
+  questionText: "",
+  optionA: "",
+  optionB: "",
+  optionC: "",
+  optionD: "",
+  correctOption: "A",
+});
+
+function DppForm({ onSubmit, onCancel, loading }) {
+  const [title, setTitle] = useState("");
+  const [questions, setQuestions] = useState([emptyQuestion()]);
+
+  const updateQuestion = (index, field, value) => {
+    setQuestions((list) =>
+      list.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
+    );
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    onSubmit({ title, questions });
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <input
+        className="input-base"
+        placeholder="DPP title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+      />
+      {questions.map((q, index) => (
+        <div key={index} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <textarea
+            className="input-base min-h-20"
+            placeholder={`Question ${index + 1}`}
+            value={q.questionText}
+            onChange={(e) => updateQuestion(index, "questionText", e.target.value)}
+            required
+          />
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {["A", "B", "C", "D"].map((opt) => (
+              <label key={opt} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name={`correct-${index}`}
+                  checked={q.correctOption === opt}
+                  onChange={() => updateQuestion(index, "correctOption", opt)}
+                />
+                <input
+                  className="input-base"
+                  placeholder={`Option ${opt}`}
+                  value={q[`option${opt}`]}
+                  onChange={(e) => updateQuestion(index, `option${opt}`, e.target.value)}
+                  required
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+      <div className="flex flex-wrap justify-between gap-3">
+        <Button type="button" variant="outline" icon={Plus} onClick={() => setQuestions((q) => [...q, emptyQuestion()])}>
+          Add question
+        </Button>
+        <div className="flex gap-3">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Saving..." : "Save DPP"}
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function CodeProblemForm({ initialValues = {}, onSubmit, onCancel, loading }) {
+  const [title, setTitle] = useState(initialValues.title || "");
+  const [questionText, setQuestionText] = useState(initialValues.questionText || "");
+  const [solutionCode, setSolutionCode] = useState(initialValues.solutionCode || "");
+
+  const submit = (e) => {
+    e.preventDefault();
+    onSubmit({ title, questionText, solutionCode });
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <input
+        className="input-base"
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+      />
+      <textarea
+        className="input-base min-h-32"
+        placeholder="Question"
+        value={questionText}
+        onChange={(e) => setQuestionText(e.target.value)}
+        required
+      />
+      <textarea
+        className="input-base min-h-48 font-mono"
+        placeholder="Solution code"
+        value={solutionCode}
+        onChange={(e) => setSolutionCode(e.target.value)}
+        required
+      />
+      <div className="flex justify-end gap-3">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Saving..." : "Save Code"}
+        </Button>
+      </div>
+    </form>
   );
 }
