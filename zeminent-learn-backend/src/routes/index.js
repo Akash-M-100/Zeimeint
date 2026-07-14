@@ -13,6 +13,8 @@ const instructorRoutes = require('./instructor.routes');
 const placementRoutes = require('./placement.routes');
 const batchRoutes = require('./batch.routes');
 const pathRoutes = require('./path.routes');   // <-- ADD THIS
+const dppRoutes = require('./dpp.routes');
+const codeProblemRoutes = require('./codeProblem.routes');
 
 const router = express.Router();
 
@@ -41,5 +43,7 @@ router.use('/batches', batchRoutes);
 
 // Learning Path Routes
 router.use('/path', pathRoutes);   // <-- ADD THIS
+router.use('/dpps', dppRoutes);
+router.use('/code-problems', codeProblemRoutes);
 
 module.exports = router;

@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 import {
   GridIcon,
+  BookIcon,
   MedalIcon,
   ArrowLeftIcon,
   GraduationCapIcon,
@@ -23,6 +24,7 @@ import ThemeToggle from "../../components/ThemeToggle";
 const navItems = [
   { id: "dashboard", label: "Dashboard", href: "/Dashboard", Icon: GridIcon },
   { id: "courses", label: "My Courses", href: "/courses", Icon: GraduationCapIcon },
+  { id: "curriculum", label: "Curriculum", href: "/Dashboard/Curriculum", Icon: BookIcon },
   { id: "live-classes", label: "Live Classes", href: "/Dashboard/LiveClasses", Icon: BroadcastIcon },
   { id: "certificate", label: "Certificates", href: "/Dashboard/Certificate", Icon: MedalIcon },
   { id: "profile", label: "Profile", href: "/Profile", Icon: UserIcon },

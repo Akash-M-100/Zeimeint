@@ -68,6 +68,15 @@ export const ENDPOINTS = {
     update: (id) => `/sections/${id}`,
     remove: (id) => `/sections/${id}`,
   },
+  dpps: {
+    create: (sectionId) => `/sections/${sectionId}/dpps`,
+    remove: (id) => `/dpps/${id}`,
+  },
+  codeProblems: {
+    create: (sectionId) => `/sections/${sectionId}/code-problems`,
+    update: (id) => `/code-problems/${id}`,
+    remove: (id) => `/code-problems/${id}`,
+  },
   payments: {
     list: "/admin/payments",
   },

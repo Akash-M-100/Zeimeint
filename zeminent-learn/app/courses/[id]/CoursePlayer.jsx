@@ -7,6 +7,7 @@ import { ArrowLeftIcon, LockIcon } from "@/app/components/Icons";
 import VideoPlayer from "./VideoPlayer";
 import YouTubePlayer from "./YouTubePlayer";
 import CourseTOC from "./CourseTOC";
+import CodePlayground from "./CodePlayground";
 
 // Synthetic group name shown above lectures that don't yet belong to a section.
 const ORPHAN_GROUP_TITLE = "Course content";
@@ -285,6 +286,8 @@ export default function CoursePlayer({
               )}
             </div>
           )}
+
+          {active && <CodePlayground />}
         </div>
 
         {/* Right ~30%: sectioned table of contents */}
